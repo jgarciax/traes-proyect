@@ -1,5 +1,6 @@
 import java.util.*;
 
+// Mejora: validación de entrada y control de errores implementado (por daniel)
 public class Main {
 
     // Nodo del árbol
