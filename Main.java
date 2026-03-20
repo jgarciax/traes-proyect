@@ -121,7 +121,7 @@ public class Main {
         return vars;
     }
 
-    // PARSER
+    // PARSER RECURSIVO DESCENDENTE
 
     static Nodo parsearSumaResta() {
         Nodo nodo = parsearMultDiv();
