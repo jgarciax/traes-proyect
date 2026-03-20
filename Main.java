@@ -1,6 +1,6 @@
 import java.util.*;
 
-// Mejora: validación de entrada y control de errores implementado (por daniel)
+// Mejora: validación de entrada y control de errores implementado
 public class Main {
 
     // Nodo del árbol
@@ -13,56 +13,47 @@ public class Main {
         }
     }
 
-    // Variables globales para el parser
     static String expresion;
     static int pos;
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║   Evaluador de Expresiones Matemáticas   ║");
-        System.out.println("╚══════════════════════════════════════════╝");
+        System.out.println("Evaluador de Expresiones Matemáticas");
         System.out.println("Operadores permitidos: + - * / ^ √");
         System.out.println("Ejemplo: a + b - (c - b) + e\n");
 
-        // Leer expresión
         System.out.print("Ingresa la expresión: ");
         String entrada = sc.nextLine().trim();
 
-        // Validar vacío
         if (entrada.isEmpty()) {
-            System.out.println("❌ Error: La expresión no puede estar vacía.");
+            System.out.println("Error: La expresión no puede estar vacía.");
             sc.close();
             return;
         }
 
-        // Validar caracteres
         if (!validarCaracteres(entrada)) {
-            System.out.println("❌ Error: La expresión contiene caracteres no permitidos.");
+            System.out.println("Error: La expresión contiene caracteres no permitidos.");
             sc.close();
             return;
         }
 
-        // Validar paréntesis
         if (!validarParentesis(entrada)) {
-            System.out.println("❌ Error: Paréntesis desbalanceados.");
+            System.out.println("Error: Paréntesis desbalanceados.");
             sc.close();
             return;
         }
 
-        // Detectar variables
         Set<Character> vars = detectarVariables(entrada);
 
-        // Pedir valores
         Map<String, Double> valores = new HashMap<>();
         if (!vars.isEmpty()) {
-            System.out.println("\n🔎 Variables detectadas. Ingresa sus valores:");
+            System.out.println("\nVariables detectadas. Ingresa sus valores:");
             int i = 1;
             for (char v : new TreeSet<>(vars)) {
                 System.out.print("  " + i + ". " + v + " = ? ");
                 while (!sc.hasNextDouble()) {
-                    System.out.print("     Valor inválido, intenta de nuevo: ");
+                    System.out.print("Valor inválido, intenta de nuevo: ");
                     sc.next();
                 }
                 valores.put(String.valueOf(v), sc.nextDouble());
@@ -76,30 +67,27 @@ public class Main {
 
             Nodo raiz = parsearSumaResta();
 
-            // Validar que toda la expresión fue usada
             if (pos < expresion.length()) {
                 throw new RuntimeException("Error en la expresión cerca de: '" + expresion.charAt(pos) + "'");
             }
 
-            System.out.println("\n📌 Árbol de expresión:");
+            System.out.println("\nArbol de expresión:");
             imprimirArbol(raiz, "", true);
 
             double resultado = evaluar(raiz, valores);
-            System.out.println("\n✅ Resultado: " + resultado);
+            System.out.println("\nResultado: " + resultado);
 
         } catch (Exception e) {
-            System.out.println("❌ Error al procesar la expresión: " + e.getMessage());
+            System.out.println("Error al procesar la expresión: " + e.getMessage());
         }
 
         sc.close();
     }
 
-    // Validación de caracteres
     static boolean validarCaracteres(String expr) {
         return expr.matches("[a-zA-Z0-9+\\-*/^√().\\s]+");
     }
 
-    // Validar paréntesis balanceados
     static boolean validarParentesis(String expr) {
         int contador = 0;
         for (char c : expr.toCharArray()) {
@@ -110,7 +98,6 @@ public class Main {
         return contador == 0;
     }
 
-    // Detectar variables
     static Set<Character> detectarVariables(String expr) {
         Set<Character> vars = new LinkedHashSet<>();
         for (char c : expr.toCharArray()) {
@@ -124,37 +111,51 @@ public class Main {
     // PARSER RECURSIVO DESCENDENTE
 
     static Nodo parsearSumaResta() {
-        Nodo nodo = parsearMultDiv();
-        while (pos < expresion.length() &&
-               (expresion.charAt(pos) == '+' || expresion.charAt(pos) == '-')) {
+        try {
+            Nodo nodo = parsearMultDiv();
 
-            char op = expresion.charAt(pos++);
-            Nodo derecho = parsearMultDiv();
+            while (pos < expresion.length() &&
+                   (expresion.charAt(pos) == '+' || expresion.charAt(pos) == '-')) {
 
-            Nodo padre = new Nodo(String.valueOf(op));
-            padre.izquierdo = nodo;
-            padre.derecho = derecho;
+                char op = expresion.charAt(pos++);
+                Nodo derecho = parsearMultDiv();
 
-            nodo = padre;
+                Nodo padre = new Nodo(String.valueOf(op));
+                padre.izquierdo = nodo;
+                padre.derecho = derecho;
+
+                nodo = padre;
+            }
+
+            return nodo;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error en suma/resta en posición " + pos + ": " + e.getMessage());
         }
-        return nodo;
     }
 
     static Nodo parsearMultDiv() {
-        Nodo nodo = parsearPotencia();
-        while (pos < expresion.length() &&
-               (expresion.charAt(pos) == '*' || expresion.charAt(pos) == '/')) {
+        try {
+            Nodo nodo = parsearPotencia();
 
-            char op = expresion.charAt(pos++);
-            Nodo derecho = parsearPotencia();
+            while (pos < expresion.length() &&
+                   (expresion.charAt(pos) == '*' || expresion.charAt(pos) == '/')) {
 
-            Nodo padre = new Nodo(String.valueOf(op));
-            padre.izquierdo = nodo;
-            padre.derecho = derecho;
+                char op = expresion.charAt(pos++);
+                Nodo derecho = parsearPotencia();
 
-            nodo = padre;
+                Nodo padre = new Nodo(String.valueOf(op));
+                padre.izquierdo = nodo;
+                padre.derecho = derecho;
+
+                nodo = padre;
+            }
+
+            return nodo;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error en multiplicación/división en posición " + pos + ": " + e.getMessage());
         }
-        return nodo;
     }
 
     static Nodo parsearPotencia() {
@@ -235,7 +236,6 @@ public class Main {
         throw new RuntimeException("Carácter inválido: '" + c + "'");
     }
 
-    // Evaluación
     static double evaluar(Nodo nodo, Map<String, Double> valores) {
         if (nodo == null) {
             throw new RuntimeException("Nodo nulo.");
@@ -271,7 +271,6 @@ public class Main {
         }
     }
 
-    // Imprimir árbol
     static void imprimirArbol(Nodo nodo, String prefijo, boolean esUltimo) {
         if (nodo == null) return;
 
